@@ -6,7 +6,6 @@ import ru.netology.model.Post;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class PostRepository {
     private final ConcurrentHashMap<Long, Post> posts;
-    private final AtomicLong idCounter = new AtomicLong(1L);
+    private final AtomicLong idCounter = new AtomicLong(0L);
 
     public PostRepository()  {
         posts  = new ConcurrentHashMap<>();
@@ -31,17 +30,34 @@ public class PostRepository {
     }
 
     public Post save(Post post) {
-        if (posts.containsKey(post.getId())) {
-            Post changedPost = posts.get(post.getId());
-            changedPost.setContent(post.getContent());
-            return changedPost;
-        } else {
-            post.setId(idCounter.incrementAndGet());
+        if (post.getId() != 0 && !posts.containsKey(post.getId())) {
+            throw new NotFoundException();
+
+        }else {
             posts.put(post.getId(), post);
-            return post;
         }
 
+        if(post.getId() == 0) {
+            var newId = idCounter.incrementAndGet();
+            post.setId(newId);
+            posts.put(post.getId(), post);
+        }
+
+        return post;
     }
+//моя изначальная реализация save
+    //public Post save(Post post) {
+      //  if (posts.containsKey(post.getId())) {
+        //    Post changedPost = posts.get(post.getId());
+          //  changedPost.setContent(post.getContent());
+            //return changedPost;
+        //} else {
+          //  post.setId(idCounter.incrementAndGet());
+            //posts.put(post.getId(), post);
+            //return post;
+        //}
+
+    //}
 
     public void removeById(long id) {
         if (posts.containsKey(id)) {

@@ -1,6 +1,7 @@
 package ru.netology.servlet;
 
 import ru.netology.controller.PostController;
+import ru.netology.exception.NotFoundException;
 import ru.netology.repository.PostRepository;
 import ru.netology.service.PostService;
 
@@ -13,7 +14,7 @@ import java.io.IOException;
 public class MainServlet extends HttpServlet {
     PostController postController;
     public static final String API_POSTS = "/api/posts";
-    public static final String API_POSTS_D = "/api/posts/\\d+";
+    public static final String API_POSTS_ID = "/api/posts/\\d+";
     public static final String STR = "/";
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
@@ -31,30 +32,30 @@ public class MainServlet extends HttpServlet {
         try {
             final var path = req.getRequestURI();
             final var method = req.getMethod();
-            final var id = getIdFromUrl(path);
+
 
             if (method.equals(GET_METHOD) && path.equals(API_POSTS)) {
                 postController.all(response);
                 return;
             }
-            if (method.equals(GET_METHOD) && path.matches(API_POSTS_D)) {
+            if (method.equals(GET_METHOD) && path.matches(API_POSTS_ID)) {
+                final var id = Long.parseLong(path.substring(path.lastIndexOf(STR) + 1));
                 postController.getById(id, response);
                 return;
             }
             if (method.equals(POST_METHOD) && path.equals(API_POSTS)) {
-                postController.save(req.getReader(),response);
+                postController.save(req.getReader(), response);
             }
-            if (method.equals(DELETE_METHOD) && path.matches(API_POSTS_D)) {
+            if (method.equals(DELETE_METHOD) && path.matches(API_POSTS_ID)) {
+                final var id = Long.parseLong(path.substring(path.lastIndexOf(STR) + 1));
                 postController.removeById(id, response);
             }
+        } catch (NotFoundException e) {
+            e.getMessage();
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         } catch (IOException ioException) {
             ioException.getMessage();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
-    }
-
-    private long getIdFromUrl(String path) {
-        return Long.parseLong(path.substring(path.lastIndexOf("/") + 1));
     }
 }
